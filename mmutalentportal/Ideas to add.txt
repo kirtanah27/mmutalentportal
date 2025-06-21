@@ -1,0 +1,30 @@
+Zharif (as of 13/6/2025)
+- added admin role (different homepage)
+- added faq (both users and admin)
+- added news (both users and admin)
+- added forum (both users and admin)
+- added feedback (both users and admin)
+- added manage e-catalogue (for admin)
+- added the following tables in mmutalentportal database (can refer to the mmu_talent_portal_schema.sql file):
+    - faq
+    - faqsubmission
+    - news
+    - forum_threads
+    - forum_replies
+    - feedback
+- updated navbar for talent-role, buyer-role and admin-role (not sure what to do for Cart)
+
+Things to add:
+- Add auto-login after registration
+- Add cart page for buyer-role and admin-role (not sure about talent-role)
+- Add manage students page for admin-role (maybe to delete any user)
+
+
+
+
+Key areas for further development/refinement if you wish to fulfill all proposal details:
+
+Admin Dashboard (index.php for Admin): Display actual statistics (total users, etc.) instead of just buttons.
+Student Account Page (student_manage.php): Add "edit" and "deactivate" functionality for user accounts.
+Talent Page (catalogue_manage.php): Add "approve/reject/flag" functionality for talent posts, and filtering within the admin view.
+
