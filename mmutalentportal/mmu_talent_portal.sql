@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jun 21, 2025 at 07:59 AM
+-- Generation Time: Jun 21, 2025 at 06:21 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -20,6 +20,20 @@ SET time_zone = "+00:00";
 --
 -- Database: `mmu_talent_portal`
 --
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `cart_items`
+--
+
+CREATE TABLE `cart_items` (
+  `cart_item_id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `talent_id` int(11) NOT NULL,
+  `quantity` int(11) NOT NULL DEFAULT 1,
+  `added_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -84,6 +98,13 @@ CREATE TABLE `forum_replies` (
   `replied_at` datetime DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `forum_replies`
+--
+
+INSERT INTO `forum_replies` (`reply_id`, `thread_id`, `user_id`, `reply_content`, `replied_at`) VALUES
+(1, 1, 5, 'Thats great !! I like cat paintings', '2025-06-22 00:19:29');
+
 -- --------------------------------------------------------
 
 --
@@ -98,6 +119,13 @@ CREATE TABLE `forum_threads` (
   `created_at` datetime DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `forum_threads`
+--
+
+INSERT INTO `forum_threads` (`thread_id`, `user_id`, `title`, `content`, `created_at`) VALUES
+(1, 12, 'What are your thoughts on paintings?', 'Hi I am about to start selling my paintings. I would like to know what type of painting is generally favoured', '2025-06-22 00:18:25');
+
 -- --------------------------------------------------------
 
 --
@@ -111,6 +139,38 @@ CREATE TABLE `news` (
   `created_by` int(11) NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `news`
+--
+
+INSERT INTO `news` (`news_id`, `title`, `content`, `created_by`, `created_at`) VALUES
+(1, 'New Features Alert', 'Dear Users,\r\n\r\nWe\'re excited to announce the launch of two brand new features on our platform:\r\n\r\n???? Post Your Talent\r\nYou can now showcase your skills and creative offerings — whether it\'s music lessons, photography, writing, or digital art. Create a listing, set your price, and get discovered by others!\r\n\r\n???? Forum Discussions\r\nEngage with the community through open discussions. Share your thoughts, ask questions, or start meaningful conversations in our new forum section.\r\n\r\n???? Coming Soon:\r\n\r\nRating & review system for talents\r\n\r\nFeatured talents on the homepage\r\n\r\nMore categories for better discovery\r\n\r\nIf you experience any bugs or have suggestions, feel free to reply to this thread or contact us directly.\r\n\r\nLet’s grow this creative community together! ????', 6, '2025-06-21 16:20:21');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `notifications`
+--
+
+CREATE TABLE `notifications` (
+  `notification_id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `title` varchar(255) NOT NULL,
+  `type` varchar(50) NOT NULL,
+  `content` text DEFAULT NULL,
+  `is_read` tinyint(1) DEFAULT 0,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `notifications`
+--
+
+INSERT INTO `notifications` (`notification_id`, `user_id`, `title`, `type`, `content`, `is_read`, `created_at`) VALUES
+(1, 4, 'Top 10 Horror Stories Malaysia', 'talent_approved', NULL, 0, '2025-06-21 15:41:54'),
+(2, 11, 'Scenery Photography', 'talent_purchased', NULL, 0, '2025-06-21 16:12:31'),
+(3, 4, 'Top 10 Horror Stories Malaysia', 'talent_purchased', NULL, 0, '2025-06-21 16:14:07');
 
 -- --------------------------------------------------------
 
@@ -139,8 +199,10 @@ CREATE TABLE `talents` (
 --
 
 INSERT INTO `talents` (`talent_id`, `user_id`, `title`, `tagline`, `description`, `media_type`, `media_path`, `category`, `price`, `delivery_time`, `tags`, `is_approved`, `created_at`) VALUES
-(1, 1, 'Apple Lady', 'Yummy', 'A beautiful lady eating apple', 'image', 'uploads/media/1750096007_images (4).jpg', 'Art', 10.06, 3, 'Artsy', 0, '2025-06-16 17:46:47'),
-(2, 10, 'Python Workshop for Beginners', 'Learn Python for Beginners !!', 'Starting a degree in computer science and you\'re clueless on what you are going to do? Fret not as you can join my extensive Python Workshop! By the end of the workshop, you\'ll be so confident you\'ll ace all your exams <3', 'image', 'uploads/media/1750354250_python-programming-for-kids-2.jpg', 'Programming', 200.00, 1, '', 0, '2025-06-19 17:30:50');
+(2, 10, 'Python Workshop for Beginners', 'Learn Python for Beginners !!', 'Starting a degree in computer science and you\'re clueless on what you are going to do? Fret not as you can join my extensive Python Workshop! By the end of the workshop, you\'ll be so confident you\'ll ace all your exams <3', 'image', 'uploads/media/1750354250_python-programming-for-kids-2.jpg', 'Programming', 200.00, 1, '', 1, '2025-06-19 17:30:50'),
+(3, 4, 'Piano Class', 'Learn Piano Basics in One Month', 'This course is perfect for beginners with no prior music experience. You will learn to read sheet music, understand rhythm, play basic chords, and perform simple songs by the end of the month. Lessons are tailored to your pace and goals.', 'video', 'uploads/media/1750518808_2306150-hd_1920_1080_30fps.mp4', 'Music', 100.00, 4, 'piano, music class, beginner piano, music lesson, online piano, learn piano', 1, '2025-06-21 15:13:28'),
+(4, 11, 'Scenery Photography', 'Capture Breathtaking Natural Landscapes', 'I specialize in high-quality scenery photography, capturing the beauty of nature in various locations such as mountains, beaches, forests, and urban skylines. Perfect for use in websites, prints, marketing materials, or as digital wallpapers. All photos are professionally edited and delivered in high resolution.', 'image', 'uploads/media/1750520172_istockphoto-1381637603-612x612.jpg', 'Photography', 150.00, 3, 'scenery photography, landscape, nature photo, outdoor photography, high resolution, digital art', 1, '2025-06-21 15:36:12'),
+(5, 4, 'Top 10 Horror Stories Malaysia', 'Experience Malaysia’s Scariest True & Folklore-Based Tales', 'Discover a curated collection of the top 10 horror stories rooted in Malaysian culture, myths, and real-life encounters. Each story is crafted or narrated to immerse you in chilling experiences involving haunted places, supernatural beings, and mysterious events. Available in text, audio, or video format — perfect for horror fans, podcasts, or Halloween content.\r\n\r\nCategory:', 'image', 'uploads/media/1750520487_ghost-1_ver_1.png', 'Writing', 30.00, 2, 'horror stories, Malaysian horror, ghost stories, folklore, narration, creepy tales, storytelling', 1, '2025-06-21 15:41:27');
 
 -- --------------------------------------------------------
 
@@ -172,7 +234,9 @@ INSERT INTO `transactions` (`transaction_id`, `user_id`, `amount`, `date`, `stat
 (6, 5, 10.06, '2025-06-20 01:09:46', 'completed', '', '', NULL, '', '', ''),
 (7, 5, 10.06, '2025-06-20 01:12:47', 'completed', '', '', NULL, '', '', ''),
 (8, 5, 10.06, '2025-06-20 01:13:20', 'completed', '', '', NULL, '', '', ''),
-(9, 5, 20.12, '2025-06-20 01:18:26', 'completed', 'KIRTANAH A/P MANALAN KIRTANAH A/P MANALAN', '2-3-7, Pangsapuri Andorra, Jalan Ufuk,', '25/75, Taman Sri Muda, 40400, Shah Alam,', 'Shah Alam', '40400', '0162278517');
+(9, 5, 20.12, '2025-06-20 01:18:26', 'completed', 'KIRTANAH A/P MANALAN KIRTANAH A/P MANALAN', '2-3-7, Pangsapuri Andorra, Jalan Ufuk,', '25/75, Taman Sri Muda, 40400, Shah Alam,', 'Shah Alam', '40400', '0162278517'),
+(10, 5, 150.00, '2025-06-22 00:12:31', 'completed', 'KIRTANAH A/P MANALAN KIRTANAH A/P MANALAN', '2-3-7, Pangsapuri Andorra, Jalan Ufuk,', '25/75, Taman Sri Muda, 40400, Shah Alam,', 'Shah Alam', '40400', '0162278517'),
+(11, 13, 30.00, '2025-06-22 00:14:07', 'completed', 'Kirtanah A/P Manalan', 'No 2, Lorong Kota Kemuning, 13600 Bukit Manusia,Anggerik Aranda SS 27/12', 'nbb', 'Shah Alam, Selangor, Malaysia', '40400', '01126278517');
 
 -- --------------------------------------------------------
 
@@ -203,11 +267,22 @@ INSERT INTO `users` (`user_id`, `username`, `email`, `password`, `profile_pictur
 (5, 'sharvin', 'shasha@gmail.com', '$2y$10$0Zpd/nLkA34UehmfQZn5Oep7BOo4U5OwXZRHqdybLFFEY/i0BkzMa', NULL, 'uploads/pfp/pfp_6854403e8c41e.png', '', 1, 'buyer'),
 (6, 'ruru', 'ruru@yahoo.com', '$2y$10$ssHhu2q/kAJE5cSx.5kmdOxz.8pm/JJIjfkVB/Z1lY0C7fsEA6mx.', NULL, NULL, NULL, 1, 'admin'),
 (8, 'ruru34', 'ruru@gmail.com', '$2y$10$xiDOPlCx3vSAunBOp/YnxukFUiVBT/P5Nv4ITV6fstQ6yR8ZPKT5i', NULL, NULL, NULL, 1, 'talent'),
-(10, 'ruru56', 'kirtan@gmail.com', '$2y$10$5GGwpppT8G2bLYaDjKZ4MODq/zitzA0UrtN42cLsr0wafUZT4EFhq', NULL, NULL, NULL, 1, 'talent');
+(10, 'ruru56', 'kirtan@gmail.com', '$2y$10$5GGwpppT8G2bLYaDjKZ4MODq/zitzA0UrtN42cLsr0wafUZT4EFhq', NULL, NULL, NULL, 1, 'talent'),
+(11, 'Kalla Deveshwara Rao', 'kalla77@gmail.com', '$2y$10$eCRBJlnGsTb.z6cyeCceJeG2wA00N1nawJeHgYTh4E.s7K3Qzad.2', NULL, NULL, NULL, 1, 'talent'),
+(12, 'zharif', 'zharif8@gmail.com', '$2y$10$fo8eoiwBtjEPZV4GuRIiZOp5eW320VB/SEtIaXrTHkImayEyN20J2', NULL, NULL, NULL, 1, 'talent'),
+(13, 'maliny27', 'maliny27@gmail.com', '$2y$10$CA1Vf/hVoTajyxx7bIT23eaYR3npbHAR.TK2tBMNVXwcXhjEQJlCO', NULL, NULL, NULL, 1, 'buyer');
 
 --
 -- Indexes for dumped tables
 --
+
+--
+-- Indexes for table `cart_items`
+--
+ALTER TABLE `cart_items`
+  ADD PRIMARY KEY (`cart_item_id`),
+  ADD UNIQUE KEY `uc_user_talent` (`user_id`,`talent_id`),
+  ADD KEY `talent_id` (`talent_id`);
 
 --
 -- Indexes for table `faq`
@@ -252,6 +327,13 @@ ALTER TABLE `news`
   ADD KEY `created_by` (`created_by`);
 
 --
+-- Indexes for table `notifications`
+--
+ALTER TABLE `notifications`
+  ADD PRIMARY KEY (`notification_id`),
+  ADD KEY `user_id` (`user_id`);
+
+--
 -- Indexes for table `talents`
 --
 ALTER TABLE `talents`
@@ -278,6 +360,12 @@ ALTER TABLE `users`
 --
 
 --
+-- AUTO_INCREMENT for table `cart_items`
+--
+ALTER TABLE `cart_items`
+  MODIFY `cart_item_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
 -- AUTO_INCREMENT for table `faq`
 --
 ALTER TABLE `faq`
@@ -299,41 +387,54 @@ ALTER TABLE `feedback`
 -- AUTO_INCREMENT for table `forum_replies`
 --
 ALTER TABLE `forum_replies`
-  MODIFY `reply_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `reply_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `forum_threads`
 --
 ALTER TABLE `forum_threads`
-  MODIFY `thread_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `thread_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `news`
 --
 ALTER TABLE `news`
-  MODIFY `news_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `news_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT for table `notifications`
+--
+ALTER TABLE `notifications`
+  MODIFY `notification_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `talents`
 --
 ALTER TABLE `talents`
-  MODIFY `talent_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `talent_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `transactions`
 --
 ALTER TABLE `transactions`
-  MODIFY `transaction_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `transaction_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
 -- Constraints for dumped tables
 --
+
+--
+-- Constraints for table `cart_items`
+--
+ALTER TABLE `cart_items`
+  ADD CONSTRAINT `cart_items_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `cart_items_ibfk_2` FOREIGN KEY (`talent_id`) REFERENCES `talents` (`talent_id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `faqsubmission`
@@ -367,6 +468,12 @@ ALTER TABLE `news`
   ADD CONSTRAINT `news_ibfk_1` FOREIGN KEY (`created_by`) REFERENCES `users` (`user_id`) ON DELETE CASCADE;
 
 --
+-- Constraints for table `notifications`
+--
+ALTER TABLE `notifications`
+  ADD CONSTRAINT `notifications_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE;
+
+--
 -- Constraints for table `talents`
 --
 ALTER TABLE `talents`
@@ -377,7 +484,6 @@ ALTER TABLE `talents`
 --
 ALTER TABLE `transactions`
   ADD CONSTRAINT `transactions_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE;
-  
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

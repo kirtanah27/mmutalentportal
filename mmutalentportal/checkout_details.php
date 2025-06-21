@@ -1,34 +1,55 @@
 <?php
-// PHP Section: Setup and Logic
 
-// 1. Start the session to manage user login status and cart data.
+ob_start(); // Start output buffering
 session_start();
-// 2. Include the database connection file.
 require_once 'includes/db.php';
 
-// 3. Check if the user is logged in. If not, redirect to the login page.
+// Check if the user is logged in. If not, redirect to the login page.
 if (!isset($_SESSION['user'])) {
+    ob_end_clean(); // Clear buffer before redirect
     header("Location: login.php");
     exit;
 }
 
-// 4. Ensure there are items in the cart before proceeding.
-if (!isset($_SESSION['cart']) || count($_SESSION['cart']) === 0) {
-    header("Location: cart.php?msg=" . urlencode("Your cart is empty. Nothing to checkout!"));
+// Get current user's ID
+$user_id = $_SESSION['user']['user_id'];
+
+// --- Fetch cart items from the database ---
+$cart_items_display = [];
+$total_amount = 0;
+
+try {
+    // Select cart items and join with talents table to get details
+    $stmt_cart = $pdo->prepare("
+        SELECT ci.talent_id, ci.quantity, t.title, t.price, t.media_path
+        FROM cart_items ci
+        JOIN talents t ON ci.talent_id = t.talent_id
+        WHERE ci.user_id = ?
+        ORDER BY ci.added_at DESC
+    ");
+    $stmt_cart->execute([$user_id]);
+    $cart_items_display = $stmt_cart->fetchAll(PDO::FETCH_ASSOC);
+
+    // If cart is empty, redirect back to cart page
+    if (count($cart_items_display) === 0) {
+        ob_end_clean(); // Clear buffer before redirect
+        header("Location: cart.php?msg=" . urlencode("Your cart is empty. Nothing to checkout!"));
+        exit;
+    }
+
+    // Calculate total amount
+    foreach ($cart_items_display as $item) {
+        $total_amount += $item['price'] * $item['quantity'];
+    }
+
+} catch (PDOException $e) {
+    // Handle database error during cart fetching
+    // For debugging: error_log("Checkout details cart fetch error: " . $e->getMessage());
+    ob_end_clean(); // Clear buffer before redirect
+    header("Location: cart.php?msg=" . urlencode("❌ Error fetching cart details: " . $e->getMessage()));
     exit;
 }
 
-// 5. Get current user's ID for potential pre-filling details (though not implemented to pull user profile directly here for simplicity).
-$user_id = $_SESSION['user']['user_id'];
-
-// 6. Calculate total amount from session cart.
-$cart_items = $_SESSION['cart'];
-$total_amount = 0;
-foreach ($cart_items as $item) {
-    $total_amount += $item['price'] * $item['quantity'];
-}
-
-// HTML Section: Page Structure and Display
 
 // Include the standard header.
 include 'includes/header.php';
@@ -39,7 +60,7 @@ include 'includes/header.php';
 
     <h3 style="color: #ccc; margin-bottom: 20px;">Order Summary:</h3>
     <div class="cart-summary" style="margin-bottom: 30px;">
-        <?php foreach ($cart_items as $item): ?>
+        <?php foreach ($cart_items_display as $item): ?>
             <div class="news-card" style="display: flex; align-items: center; gap: 20px; margin-bottom: 10px; padding: 15px 20px; background-color: #2c2c2c;">
                 <?php if (!empty($item['media_path'])): ?>
                     <img src="<?= htmlspecialchars($item['media_path']) ?>" alt="Talent Media" style="width: 50px; height: 50px; object-fit: cover; border-radius: 5px;">
@@ -60,12 +81,13 @@ include 'includes/header.php';
 
     <h3 style="color: #ccc; margin-bottom: 20px;">Your Details:</h3>
     <form action="checkout.php" method="POST">
-        <input type="text" name="full_name" placeholder="Full Name" required><br>
-        <input type="text" name="address_line1" placeholder="Address Line 1" required><br>
-        <input type="text" name="address_line2" placeholder="Address Line 2 (Optional)"><br>
-        <input type="text" name="city" placeholder="City" required><br>
-        <input type="text" name="postcode" placeholder="Postcode" required><br>
-        <input type="text" name="phone_number" placeholder="Phone Number" required><br>
+        <!-- Input fields with pre-filled values from POST (if form was submitted with errors) -->
+        <input type="text" name="full_name" placeholder="Full Name" value="<?= htmlspecialchars($_POST['full_name'] ?? '') ?>" required><br>
+        <input type="text" name="address_line1" placeholder="Address Line 1" value="<?= htmlspecialchars($_POST['address_line1'] ?? '') ?>" required><br>
+        <input type="text" name="address_line2" placeholder="Address Line 2 (Optional)" value="<?= htmlspecialchars($_POST['address_line2'] ?? '') ?>"><br>
+        <input type="text" name="city" placeholder="City" value="<?= htmlspecialchars($_POST['city'] ?? '') ?>" required><br>
+        <input type="text" name="postcode" placeholder="Postcode" value="<?= htmlspecialchars($_POST['postcode'] ?? '') ?>" required><br>
+        <input type="text" name="phone_number" placeholder="Phone Number" value="<?= htmlspecialchars($_POST['phone_number'] ?? '') ?>" required><br>
 
         <p style="color: #ccc; font-size: 0.9em; margin-top: 20px;">By clicking "Place Order", you agree to the terms and conditions.</p>
         <button type="submit" class="btn gold" style="margin-top: 20px;">Place Order</button>
@@ -74,6 +96,6 @@ include 'includes/header.php';
 </div>
 
 <?php
-// Include the standard footer.
 include 'includes/footer.php';
+ob_end_flush(); // Flush the output buffer
 ?>

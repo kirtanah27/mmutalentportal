@@ -1,49 +1,84 @@
 <?php
+ob_start(); // Start output buffering at the very beginning of the script
+// ini_set('display_errors', 1); // For debugging: Uncomment to display all errors
+// ini_set('display_startup_errors', 1); // For debugging: Uncomment to display startup errors
+// error_reporting(E_ALL); // For debugging: Uncomment to report all PHP errors
+
 session_start();
-require_once 'includes/db.php';
+require_once 'includes/db.php'; // Include your database connection
 
-$msg = "";
+$msg = ""; // Initialize message variable for user feedback
 
+// Check if the form has been submitted via POST method and action is 'add'
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'add') {
+    // Sanitize and retrieve form inputs
     $username = trim($_POST['username']);
     $email = trim($_POST['email']);
-    $password = $_POST['password'];
+    $password = $_POST['password']; // Password will be hashed
     $role = $_POST['role'];
 
-    // In a production environment, direct 'admin' registration should be highly restricted
-    // and ideally handled manually or through a separate secure process.
-    // This is added here for development/testing convenience as per your request.
-    $allowed_roles = ['admin', 'talent', 'buyer']; // Added 'admin' for registration option.
+    // Define allowed roles for registration
+    $allowed_roles = ['talent', 'buyer', 'admin'];
 
-    // Ensure role is one of the allowed values
+    // Validate if the selected role is allowed
     if (!in_array($role, $allowed_roles)) {
         $msg = "❌ Invalid role selected.";
     } elseif ($username && $email && $password && $role) {
-        $hashed = password_hash($password, PASSWORD_DEFAULT);
+        // Hash the password for security
+        $hashed_password = password_hash($password, PASSWORD_DEFAULT);
 
+        // Prepare and execute the SQL statement to insert the new user
         $stmt = $pdo->prepare("INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, ?)");
         try {
-            $stmt->execute([$username, $email, $hashed, $role]);
-            $msg = "✅ Account created successfully! You can now login.";
-            // Optionally, auto-login the user after successful registration
-            // $_SESSION['user'] = ['user_id' => $pdo->lastInsertId(), 'username' => $username, 'role' => $role];
-            // header("Location: index.php");
-            // exit;
+            $stmt->execute([$username, $email, $hashed_password, $role]);
+
+            // Auto-login the user after successful registration
+            $new_user_id = $pdo->lastInsertId(); // Get the ID of the newly inserted user
+
+            // Fetch the newly created user's data to populate the session
+            $stmt_fetch_user = $pdo->prepare("SELECT user_id, username, email, role FROM users WHERE user_id = ?");
+            $stmt_fetch_user->execute([$new_user_id]);
+            $user_data = $stmt_fetch_user->fetch(PDO::FETCH_ASSOC);
+
+            if ($user_data) {
+                $_SESSION['user'] = $user_data; // Store user data in session
+                session_regenerate_id(true); // Regenerate session ID for security
+
+                // Set a success message to be displayed on the redirected page
+                $msg = "✅ Account created successfully! You are now logged in.";
+                
+                // Clear the output buffer and redirect to the home page (or appropriate starting page)
+                ob_end_clean(); // Clean the buffer before redirecting
+                header("Location: index.php?msg=" . urlencode($msg));
+                exit(); // Terminate script execution after redirection
+            } else {
+                // This case should ideally not happen if insertion was successful
+                $msg = "❌ An error occurred during auto-login. Please try logging in manually.";
+            }
+
         } catch (PDOException $e) {
-            $msg = "❌ Username or email already exists. Or a database error occurred.";
-            // For debugging: $msg .= " " . $e->getMessage();
+            // Handle database errors (e.g., duplicate username or email)
+            // Check if the error code indicates a duplicate entry (SQLSTATE 23000)
+            if ($e->getCode() === '23000') {
+                $msg = "❌ Username or email already exists. Please choose a different one.";
+            } else {
+                $msg = "❌ A database error occurred during registration. Please try again.";
+                // For detailed debugging, uncomment the line below:
+                // error_log("Registration PDO Error: " . $e->getMessage());
+            }
         }
     } else {
-        $msg = "❗ Please fill in all fields.";
+        $msg = "❗ Please fill in all required fields.";
     }
 }
-?>
 
-<?php include 'includes/header.php'; ?>
+// Include the header file
+include 'includes/header.php';
+?>
 
 <div class="container auth-box">
     <h2>Register</h2>
-    <?php if ($msg): ?><p class="message"><?= htmlspecialchars($msg) ?></p><?php endif; ?>
+    <?php if ($msg): // Display messages to the user ?><p class="message"><?= htmlspecialchars($msg) ?></p><?php endif; ?>
 
     <form action="register.php" method="POST">
         <input type="hidden" name="action" value="add">
@@ -59,7 +94,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             <option value="">-- Select Role --</option>
             <option value="talent">Talent</option>
             <option value="buyer">Buyer</option>
-            <option value="admin">Admin</option> <!-- Added admin option for testing -->
+            <option value="admin">Admin</option> <!-- Remember to restrict admin registration in a production environment -->
         </select><br>
 
         <button type="submit" class="btn gold" style="margin-top:20px;">Create Account</button>

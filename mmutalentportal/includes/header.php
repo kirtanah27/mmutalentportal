@@ -28,14 +28,19 @@ if (session_status() === PHP_SESSION_NONE) {
             <a href="post.php">Post Talent</a>
             <a href="feedback.php">Feedback</a>
             <a href="forum.php">Forum</a>
+            <a href="faq.php">FAQ</a>
+            <a href="news.php">News</a>
             <a href="notifications.php">Notifications</a>
             <a href="logout.php">Logout</a>
+            
 
         <?php elseif ($_SESSION['user']['role'] === 'buyer'): ?>
             <a href="profile.php">Profile</a>
             <a href="catalogue.php">E-Catalogue</a>
             <a href="feedback.php">Feedback</a>
             <a href="forum.php">Forum</a>
+            <a href="faq.php">FAQ</a>
+            <a href="news.php">News</a>
             <a href="transactions.php">Purchase History</a>
             <a href="cart.php">Cart</a>
             <a href="logout.php">Logout</a>

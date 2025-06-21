@@ -1,4 +1,5 @@
 <?php
+
 // PHP Section: Setup and Logic
 
 // 1. Start the session.
