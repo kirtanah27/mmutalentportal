@@ -17,12 +17,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $password = $_POST['password']; // Password will be hashed
     $role = $_POST['role'];
 
-    // Define allowed roles for registration
-    $allowed_roles = ['talent', 'buyer', 'admin'];
+    // Define allowed roles for public registration
+    // Removed 'admin' from here; admins can only be created by other admins via admin_manage.php
+    $allowed_roles = ['talent', 'buyer']; 
 
     // Validate if the selected role is allowed
     if (!in_array($role, $allowed_roles)) {
-        $msg = "❌ Invalid role selected.";
+        $msg = "❌ Invalid role selected. Please choose 'Talent' or 'Buyer'.";
     } elseif ($username && $email && $password && $role) {
         // Hash the password for security
         $hashed_password = password_hash($password, PASSWORD_DEFAULT);
@@ -45,7 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 session_regenerate_id(true); // Regenerate session ID for security
 
                 // Set a success message to be displayed on the redirected page
-                $msg = "✅ Account created successfully! You are now logged in.";
+                $msg = "✅ Account created successfully! You are now logged in as a " . ucfirst($user_data['role']) . ".";
                 
                 // Clear the output buffer and redirect to the home page (or appropriate starting page)
                 ob_end_clean(); // Clean the buffer before redirecting
@@ -94,7 +95,7 @@ include 'includes/header.php';
             <option value="">-- Select Role --</option>
             <option value="talent">Talent</option>
             <option value="buyer">Buyer</option>
-            <option value="admin">Admin</option> <!-- Remember to restrict admin registration in a production environment -->
+            <!-- The 'admin' option has been removed for public registration -->
         </select><br>
 
         <button type="submit" class="btn gold" style="margin-top:20px;">Create Account</button>

@@ -29,7 +29,9 @@ if (isset($_POST['create'])) {
 // Delete News
 if (isset($_GET['delete'])) {
     $delete_id = (int)$_GET['delete'];
-    $pdo->prepare("DELETE FROM news WHERE news_id = ?")->execute([$delete_id]);
+    // Allow any admin to delete the news item
+    $stmt = $pdo->prepare("DELETE FROM news WHERE news_id = ?");
+    $stmt->execute([$delete_id]);
     $msg = "News deleted.";
 }
 
@@ -40,17 +42,17 @@ if (isset($_POST['update'])) {
     $content = trim($_POST['content']);
 
     if ($title && $content) {
-        $stmt = $pdo->prepare("UPDATE news SET title = ?, content = ? WHERE news_id = ? AND created_by = ?");
-        $stmt->execute([$title, $content, $news_id, $admin_id]);
+        // Allow any admin to update the news item
+        $stmt = $pdo->prepare("UPDATE news SET title = ?, content = ? WHERE news_id = ?");
+        $stmt->execute([$title, $content, $news_id]);
         $msg = "News updated.";
     } else {
         $msg = "❗ Title and content are required.";
     }
 }
 
-// Fetch all admin's posts
-$news = $pdo->prepare("SELECT * FROM news WHERE created_by = ? ORDER BY created_at DESC");
-$news->execute([$admin_id]);
+// Fetch ALL news posts for admin view
+$news = $pdo->query("SELECT n.*, u.username AS created_by_username FROM news n JOIN users u ON n.created_by = u.user_id ORDER BY n.created_at DESC");
 $news_list = $news->fetchAll();
 ?>
 
@@ -61,20 +63,23 @@ $news_list = $news->fetchAll();
     <?php if ($msg): ?><p class="message"><?= $msg ?></p><?php endif; ?>
 
     <!-- Create Form -->
+    <h3 style="color: #f4c95d; margin-bottom: 15px;">Create New News Post</h3>
     <form action="news_manage.php" method="POST" style="margin-bottom: 30px;">
         <label for="title">Title</label>
-        <input type="text" name="title" required>
+        <input type="text" name="title" placeholder="News title" required>
 
         <label for="content">Content</label>
-        <textarea name="content" rows="5" required></textarea>
+        <textarea name="content" rows="5" placeholder="News content" required></textarea>
 
         <button type="submit" name="create" class="btn gold">Post News</button>
     </form>
 
     <!-- Manage Existing Posts -->
+    <h3 style="color: #f4c95d; margin-bottom: 15px;">All News Posts</h3>
     <?php if (count($news_list) > 0): ?>
         <?php foreach ($news_list as $item): ?>
             <div class="admin-news-card">
+                <p style="font-size: 0.9em; color: #888; margin-bottom: 5px;">Posted by: <strong><?= htmlspecialchars($item['created_by_username']) ?></strong> on <?= date("F j, Y, g:i a", strtotime($item['created_at'])) ?></p>
                 <form action="news_manage.php" method="POST">
                     <input type="hidden" name="news_id" value="<?= $item['news_id'] ?>">
 
@@ -85,7 +90,7 @@ $news_list = $news->fetchAll();
                     <a href="news_manage.php?delete=<?= $item['news_id'] ?>" class="btn outline" onclick="return confirm('Are you sure you want to delete this news item?')">Delete</a>
                 </form>
             </div>
-            <?php endforeach; ?>
+        <?php endforeach; ?>
     <?php else: ?>
         <p>No news posted yet.</p>
     <?php endif; ?>

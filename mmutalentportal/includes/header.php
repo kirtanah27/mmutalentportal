@@ -2,6 +2,27 @@
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
+
+// Session timeout logic
+$session_timeout = 600; // 10 minutes in seconds
+
+if (isset($_SESSION['user']) && isset($_SESSION['last_activity'])) {
+    // Check if the last activity was longer than the session timeout
+    if ((time() - $_SESSION['last_activity']) > $session_timeout) {
+        // Session has expired, destroy it
+        session_unset();
+        session_destroy();
+        // Redirect to login page with a message
+        // Ensure no output has been sent before this header
+        header("Location: login.php?msg=" . urlencode("You have been logged out due to inactivity."));
+        exit;
+    }
+}
+// Update last activity time for the current request
+$_SESSION['last_activity'] = time();
+
+// Require database connection if not already included (it should be included in most files anyway)
+require_once 'includes/db.php'; 
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -51,6 +72,7 @@ if (session_status() === PHP_SESSION_NONE) {
                 <a href="#">Manage ▾</a>
                 <div class="dropdown-content">
                     <a href="student_manage.php">Student Accounts</a>
+                    <a href="admin_manage.php">Admin Accounts</a> <!-- New link for admin management -->
                     <a href="catalogue_manage.php">E-Catalogue</a>
                     <a href="faq_manage.php">FAQ</a>
                     <a href="news_manage.php">News</a>
