@@ -1,24 +1,25 @@
 <?php
-ob_start(); // Start output buffering at the very beginning of the script
+
+ob_start();
 session_start();
-require_once 'includes/db.php'; // Include your database connection file
+require_once 'includes/db.php';
 
-$msg = ""; // Initialize message variable for user feedback
-
-// Get the talent ID from the URL. If not set or invalid, exit.
-$talent_id = isset($_GET['id']) ? (int) $_GET['id'] : 0;
-
-if ($talent_id <= 0) {
-    echo "Invalid talent ID.";
+if (!isset($_SESSION['user'])) {
+    ob_end_clean();
+    header("Location: login.php");
     exit;
 }
 
-// --- PHP Logic for Adding to Cart (Database Persistence) ---
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
-    // Check if a user is logged in
+$talent_id = isset($_GET['id']) ? (int) $_GET['id'] : 0; 
+
+if ($talent_id <= 0) {
+    echo "Invalid talent ID."; 
+    exit; 
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) { 
     if (!isset($_SESSION['user'])) {
-        // If not logged in, redirect to login page
-        ob_end_clean(); // Clear buffer before redirect
+        ob_end_clean();
         header("Location: login.php?msg=" . urlencode("Please log in to add items to your cart."));
         exit();
     }
@@ -27,43 +28,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
     $posted_talent_id = (int)$_POST['talent_id'];
     $quantity = (int)$_POST['quantity'];
 
-    // Ensure quantity is at least 1
     if ($quantity < 1) {
         $quantity = 1;
     }
 
     try {
-        // Check if the talent is already in the user's cart
         $stmt_check_cart = $pdo->prepare("SELECT quantity FROM cart_items WHERE user_id = ? AND talent_id = ?");
         $stmt_check_cart->execute([$user_id, $posted_talent_id]);
         $existing_item = $stmt_check_cart->fetch(PDO::FETCH_ASSOC);
 
         if ($existing_item) {
-            // If item exists, update its quantity
             $new_quantity = $existing_item['quantity'] + $quantity;
             $stmt_update_cart = $pdo->prepare("UPDATE cart_items SET quantity = ? WHERE user_id = ? AND talent_id = ?");
             $stmt_update_cart->execute([$new_quantity, $user_id, $posted_talent_id]);
-            $msg = "✅ Quantity updated in cart!";
+            $msg = "Quantity updated in cart!";
         } else {
-            // If item does not exist, insert it into the cart
             $stmt_insert_cart = $pdo->prepare("INSERT INTO cart_items (user_id, talent_id, quantity) VALUES (?, ?, ?)");
             $stmt_insert_cart->execute([$user_id, $posted_talent_id, $quantity]);
-            $msg = "✅ Item added to cart!";
+            $msg = "Item added to cart!";
         }
     } catch (PDOException $e) {
-        $msg = "❌ Error adding item to cart: " . $e->getMessage();
-        // Log the error for debugging: error_log("Cart error: " . $e->getMessage());
+        $msg = "Error adding item to cart: " . $e->getMessage();
+        error_log("Cart error: " . $e->getMessage());
     }
 
-    // Redirect back to the talent detail page with a message
-    ob_end_clean(); // Clear the output buffer before sending header
+    ob_end_clean();
     header("Location: talent_detail.php?id=$talent_id&msg=" . urlencode($msg));
-    exit; // Terminate script execution after redirection
+    exit;
 }
-// --- End PHP Logic for Adding to Cart ---
 
-
-// --- PHP Logic for Fetching Talent Details (Remains largely the same) ---
 if (isset($_GET['msg'])) {
     $msg = urldecode($_GET['msg']);
 }
@@ -74,21 +67,19 @@ try {
     $talent = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if (!$talent) {
-        echo "Talent not found.";
+        echo "Talent not found."; 
         exit;
     }
 
     $can_view_unapproved = false;
-    // Check if the current user is an admin or the owner of the talent
     if (isset($_SESSION['user'])) {
         if ($_SESSION['user']['role'] === 'admin' || $_SESSION['user']['user_id'] === $talent['user_id']) {
             $can_view_unapproved = true;
         }
     }
 
-    // If talent is not approved and user cannot view unapproved talents, deny access
     if (!$talent['is_approved'] && !$can_view_unapproved) {
-        echo "This talent is not yet approved and cannot be viewed.";
+        echo "This talent is not yet approved and cannot be viewed."; 
         exit;
     }
 
@@ -97,7 +88,6 @@ try {
     exit;
 }
 
-// Include the standard header for the page
 include 'includes/header.php';
 ?>
 
@@ -165,7 +155,6 @@ include 'includes/header.php';
     <?php endif; ?>
 
     <?php
-    // Display 'Add to Cart' form only if logged in as a buyer and not viewing own talent
     if (
         isset($_SESSION['user']) &&
         $_SESSION['user']['role'] === 'buyer' &&
@@ -175,9 +164,6 @@ include 'includes/header.php';
     ?>
         <form method="POST" style="margin-top: 20px;">
             <input type="hidden" name="talent_id" value="<?= $talent['talent_id'] ?>">
-            <!-- These hidden fields are useful for initial display in cart.php,
-                 but the definitive price and title should always be fetched from the database
-                 in cart.php for security and data integrity. -->
             <input type="hidden" name="title" value="<?= htmlspecialchars($talent['title']) ?>">
             <input type="hidden" name="price" value="<?= htmlspecialchars($talent['price']) ?>">
             <input type="hidden" name="media_path" value="<?= htmlspecialchars($talent['media_path']) ?>">
@@ -190,7 +176,6 @@ include 'includes/header.php';
             <a href="cart.php" class="btn outline">View Cart</a>
         </form>
     <?php
-    // Display 'Edit My Talent' button if logged in as talent and viewing own talent
     elseif (
         isset($_SESSION['user']) &&
         $_SESSION['user']['user_id'] === $talent['user_id'] &&
@@ -205,5 +190,5 @@ include 'includes/header.php';
 
 <?php
 include 'includes/footer.php';
-ob_end_flush(); // Flush the output buffer at the end of the script
+ob_end_flush();
 ?>

@@ -1,15 +1,9 @@
 <?php
-// Ensure output buffering starts at the absolute top of the file
-ob_start();
 
-// Check if session has already been started by includes/header.php.
-// If not, start it. This is a failsafe, but ideally header.php handles it.
+ob_start();
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
-
-// Session timeout logic is now primarily in includes/header.php for global application,
-// but we retain the require_once 'includes/db.php'; here as well.
 require_once 'includes/db.php';
 
 $latest = $pdo->query("SELECT talent_id FROM talents WHERE is_approved = TRUE ORDER BY created_at DESC LIMIT 1")->fetch();
@@ -42,11 +36,10 @@ if (isset($_SESSION['user']) && $_SESSION['user']['role'] === 'admin') {
         $result = $stmt->fetch();
         $total_sales_amount = $result['total_sum'] ?? 0;
     } catch (PDOException $e) {
-        // echo "Error: " . $e->getMessage();
+        // Error handling for stats retrieval
     }
 }
 
-// Include the header file AFTER all PHP logic that might set headers
 include 'includes/header.php';
 ?>
 
@@ -130,6 +123,5 @@ include 'includes/header.php';
 
 <?php
 include 'includes/footer.php';
-// Flush the output buffer at the very end of the script
 ob_end_flush();
 ?>
