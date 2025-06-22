@@ -1,22 +1,15 @@
 <?php
+// Ensure output buffering starts at the absolute top of the file
+ob_start();
+
+// Check if session has already been started by includes/header.php.
+// If not, start it. This is a failsafe, but ideally header.php handles it.
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-$session_timeout = 600;
-
-if (isset($_SESSION['user']) && isset($_SESSION['last_activity'])) {
-    $inactive_duration = time() - $_SESSION['last_activity'];
-    if ($inactive_duration > $session_timeout) {
-        session_unset();
-        session_destroy();
-        header("Location: login.php?msg=" . urlencode("You have been logged out due to inactivity."));
-        exit;
-    }
-}
-
-$_SESSION['last_activity'] = time();
-
+// Session timeout logic is now primarily in includes/header.php for global application,
+// but we retain the require_once 'includes/db.php'; here as well.
 require_once 'includes/db.php';
 
 $latest = $pdo->query("SELECT talent_id FROM talents WHERE is_approved = TRUE ORDER BY created_at DESC LIMIT 1")->fetch();
@@ -52,9 +45,10 @@ if (isset($_SESSION['user']) && $_SESSION['user']['role'] === 'admin') {
         // echo "Error: " . $e->getMessage();
     }
 }
-?>
 
-<?php include 'includes/header.php'; ?>
+// Include the header file AFTER all PHP logic that might set headers
+include 'includes/header.php';
+?>
 
 <div class="hero">
     <div class="hero-content">
@@ -134,4 +128,8 @@ if (isset($_SESSION['user']) && $_SESSION['user']['role'] === 'admin') {
 </section>
 <?php endif; ?>
 
-<?php include 'includes/footer.php'; ?>
+<?php
+include 'includes/footer.php';
+// Flush the output buffer at the very end of the script
+ob_end_flush();
+?>

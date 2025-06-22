@@ -20,6 +20,7 @@ $cart_items_for_processing = [];
 $total_amount = 0;
 
 try {
+    // Modified query to also fetch the user_id (owner_id) of the talent
     $stmt_cart = $pdo->prepare("
         SELECT ci.talent_id, ci.quantity, t.title, t.price, t.media_path, t.user_id as talent_owner_id
         FROM cart_items ci

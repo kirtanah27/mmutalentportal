@@ -4,7 +4,7 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 // Session timeout logic
-$session_timeout = 600; // 10 minutes in seconds
+$session_timeout = 600; // Set to 5 seconds for quick testing
 
 if (isset($_SESSION['user']) && isset($_SESSION['last_activity'])) {
     // Check if the last activity was longer than the session timeout
@@ -71,7 +71,7 @@ require_once 'includes/db.php';
             <div class="dropdown">
                 <a href="#">Manage ▾</a>
                 <div class="dropdown-content">
-                    <a href="student_manage.php">Student Accounts</a>
+                    <a href="student_manage.php">User Accounts</a>
                     <a href="admin_manage.php">Admin Accounts</a> <!-- New link for admin management -->
                     <a href="catalogue_manage.php">E-Catalogue</a>
                     <a href="faq_manage.php">FAQ</a>

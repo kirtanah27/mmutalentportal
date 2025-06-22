@@ -1,9 +1,9 @@
 <?php
 
 ob_start(); // Start output buffering at the very beginning of the script
-ini_set('display_errors', 1); // For debugging: Display all errors
-ini_set('display_startup_errors', 1); // For debugging: Display startup errors
-error_reporting(E_ALL); // For debugging: Report all PHP errors
+// ini_set('display_errors', 1); // For debugging: Display all errors
+// ini_set('display_startup_errors', 1); // For debugging: Display startup errors
+// error_reporting(E_ALL); // For debugging: Report all PHP errors
 
 session_start();
 require_once 'includes/db.php';
@@ -23,23 +23,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['approve_id'])) {
         $approve_id = (int)$_POST['approve_id'];
 
+        // Retrieve talent info *before* updating its status
+        // This is important because we need the talent's title and its owner's user_id for the notification
+        $stmtTalentInfo = $pdo->prepare("SELECT user_id, title FROM talents WHERE talent_id = ?");
+        $stmtTalentInfo->execute([$approve_id]);
+        $talentInfo = $stmtTalentInfo->fetch(PDO::FETCH_ASSOC);
+
         // Prepare and execute the SQL statement to approve the talent
         $stmt = $pdo->prepare("UPDATE talents SET is_approved = TRUE WHERE talent_id = ?");
         $stmt->execute([$approve_id]);
 
-        // Fetch talent information to send a notification
-        $stmtUser = $pdo->prepare("SELECT user_id, title FROM talents WHERE talent_id = ?");
-        $stmtUser->execute([$approve_id]);
-        $talentInfo = $stmtUser->fetch();
-
         // If talent info is found, insert a notification for the talent owner
         if ($talentInfo) {
-            $notify = $pdo->prepare("INSERT INTO notifications (user_id, title, type, created_at, is_read) VALUES (?, ?, ?, NOW(), 0)");
-            $notify->execute([
-                $talentInfo['user_id'],
-                $talentInfo['title'],
-                'talent_approved'
-            ]);
+            $notifyStmt = $pdo->prepare("INSERT INTO notifications (user_id, title, type, is_read, created_at) VALUES (?, ?, 'talent_approved', 0, NOW())");
+            $notifyStmt->execute([$talentInfo['user_id'], $talentInfo['title']]);
         }
 
         $msg = "✅ Talent approved successfully.";
